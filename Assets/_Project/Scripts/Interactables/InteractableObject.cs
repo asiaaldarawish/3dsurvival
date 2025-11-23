@@ -2,51 +2,32 @@ using UnityEngine;
 
 public class InteractableObject : MonoBehaviour, IInteractable
 {
-    [SerializeField] private InteractableData data;
-
-    private bool inRange = false;
     private PlayerInteractHandler player;
 
-    public string GetInfoText() => data.infoText;
 
-    public bool CanInteract(PlayerBootstrap p) => inRange;
+    [SerializeField] private ItemData itemData;
+    [SerializeField] private int amount = 1;
 
-    public InteractableType GetInteractableType()
+    private bool alreadyTaken = false;
+
+    public void Interact(PlayerBootstrap player)
     {
-        if (data is MaterialData) return InteractableType.Material;
-        if (data is ToolData) return InteractableType.Tool;
-        return InteractableType.Resource;
-    }
+        if (alreadyTaken) return;
+        alreadyTaken = true;
 
-    private bool alreadyInteracted = false;
-
-    public void Interact(PlayerBootstrap p)
-    {
-        if (alreadyInteracted) return;
-        alreadyInteracted = true;
-
-
-        // send inventory event
-        switch (GetInteractableType())
-        {
-            case InteractableType.Material:
-                InventoryEvents.OnMaterialCollected?.Invoke((MaterialData)data);
-                break;
-
-            case InteractableType.Tool:
-                InventoryEvents.OnToolCollected?.Invoke((ToolData)data);
-                break;
-        }
+        InventoryEvents.OnItemCollected?.Invoke(itemData, amount);
 
         Destroy(gameObject);
     }
 
+    public string GetInfoText() => "Pick Up";
+
+    public bool CanInteract(PlayerBootstrap p) => !alreadyTaken;
 
     private void OnTriggerEnter(Collider other)
     {
         if (!other.CompareTag("Player")) return;
 
-        inRange = true;
         player = other.GetComponent<PlayerInteractHandler>();
         player.SetCurrent(this);
 
@@ -57,7 +38,6 @@ public class InteractableObject : MonoBehaviour, IInteractable
     {
         if (!other.CompareTag("Player")) return;
 
-        inRange = false;
         player.ClearCurrent(this);
 
         InteractionUIEvents.HideInteractionText?.Invoke();

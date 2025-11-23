@@ -1,7 +1,8 @@
 [System.Serializable]
 public class InventoryItem
 {
-    public InteractableData data;
-    public int count;
-    public int durability;
+    public ItemData data;
+    public int count;       // used if stackable
+    public int durability;  // used if hasDurability
+    
 }

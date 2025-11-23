@@ -1,25 +1,68 @@
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 public class HotbarSlotUI : MonoBehaviour
 {
-    [HideInInspector] public int slotIndex;
-    [HideInInspector] public InventoryManager inventory;
+    [SerializeField] private Image icon;
+    [SerializeField] private TextMeshProUGUI countText;
+    [SerializeField] private Slider durabilitySlider;
 
     public void Clear()
     {
-        foreach (Transform child in transform)
-            Destroy(child.gameObject);
+        SetItem(null);
     }
 
-    public void SetMaterial(InventoryItem item)
+    public void SetItem(InventoryItem item)
     {
-        var obj = Instantiate(inventory.materialSlotPrefab, transform);
-        obj.GetComponent<MaterialSlotUI>().Set(item.data as MaterialData, item.count);
-    }
+        if (item == null || item.data == null)
+        {
+            if (icon != null) icon.enabled = false;
+            if (countText != null) countText.gameObject.SetActive(false);
+            if (durabilitySlider != null) durabilitySlider.gameObject.SetActive(false);
+            return;
+        }
 
-    public void SetTool(InventoryItem item)
-    {
-        var obj = Instantiate(inventory.toolSlotPrefab, transform);
-        obj.GetComponent<ToolSlotUI>().Set(item.data as ToolData, item.durability);
+        var data = item.data;
+
+        if (icon != null)
+        {
+            icon.sprite = data.icon;
+            icon.enabled = true;
+        }
+
+        // Stackable item (materials, resources, maybe potions)
+        if (data.stackable)
+        {
+            if (countText != null)
+            {
+                countText.gameObject.SetActive(true);
+                countText.text = item.count.ToString();
+            }
+
+            if (durabilitySlider != null)
+                durabilitySlider.gameObject.SetActive(false);
+        }
+        // Non-stackable with durability (tools, gear)
+        else if (data.hasDurability)
+        {
+            if (countText != null)
+                countText.gameObject.SetActive(false);
+
+            if (durabilitySlider != null)
+            {
+                durabilitySlider.gameObject.SetActive(true);
+                durabilitySlider.maxValue = data.maxDurability;
+                durabilitySlider.value = item.durability;
+            }
+        }
+        else
+        {
+            // Non-stackable, no durability (e.g. quest item, document, potion)
+            if (countText != null)
+                countText.gameObject.SetActive(false);
+            if (durabilitySlider != null)
+                durabilitySlider.gameObject.SetActive(false);
+        }
     }
 }

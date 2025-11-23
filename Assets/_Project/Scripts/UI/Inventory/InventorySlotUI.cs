@@ -2,27 +2,31 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System;
+using TMPro;
 
 public static class InventoryUIEvents
 {
     public static Action<int, int> OnSlotSwap;
-
 }
 
 
 public class InventorySlotUI : MonoBehaviour,
-    IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
+    IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler,
+    IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
-    [Header("Setup")]
+    [Header("Refs")]
     public int SlotIndex;
     public InventoryManager inventory;
 
-    // internal UI refs
+    [SerializeField] private Image icon;
+    [SerializeField] private TextMeshProUGUI countText;
+    [SerializeField] private Slider durabilitySlider;
+
     private Canvas canvas;
     private CanvasGroup canvasGroup;
     private RectTransform rect;
 
-    // drag visuals
+    // drag ghost
     private GameObject dragIcon;
     private RectTransform dragIconRect;
 
@@ -31,44 +35,112 @@ public class InventorySlotUI : MonoBehaviour,
         canvas = GetComponentInParent<Canvas>();
         canvasGroup = GetComponent<CanvasGroup>();
         rect = GetComponent<RectTransform>();
+
+        if (icon != null) icon.enabled = false;
+        if (countText != null) countText.gameObject.SetActive(false);
+        if (durabilitySlider != null) durabilitySlider.gameObject.SetActive(false);
     }
 
     public void Clear()
     {
-        foreach (Transform child in transform)
-            Destroy(child.gameObject);
+        SetItem(null);
     }
 
-    public void SetMaterial(InventoryItem item)
+    public void SetItem(InventoryItem item)
     {
-        var obj = Instantiate(inventory.materialSlotPrefab, transform);
-        obj.GetComponent<MaterialSlotUI>().Set(item.data as MaterialData, item.count);
+        if (item == null || item.data == null)
+        {
+            if (icon != null) icon.enabled = false;
+            if (countText != null) countText.gameObject.SetActive(false);
+            if (durabilitySlider != null) durabilitySlider.gameObject.SetActive(false);
+            return;
+        }
+
+        var data = item.data;
+
+        if (icon != null)
+        {
+            icon.sprite = data.icon;
+            icon.enabled = true;
+        }
+
+        // Stackable item (materials, resources, maybe potions)
+        if (data.stackable)
+        {
+            if (countText != null)
+            {
+                countText.gameObject.SetActive(true);
+                countText.text = item.count.ToString();
+            }
+
+            if (durabilitySlider != null)
+                durabilitySlider.gameObject.SetActive(false);
+        }
+        // Non-stackable with durability (tools, gear)
+        else if (data.hasDurability)
+        {
+            if (countText != null)
+                countText.gameObject.SetActive(false);
+
+            if (durabilitySlider != null)
+            {
+                durabilitySlider.gameObject.SetActive(true);
+                durabilitySlider.maxValue = data.maxDurability;
+                durabilitySlider.value = item.durability;
+            }
+        }
+        else
+        {
+            // Non-stackable, no durability (e.g. quest item, document, potion)
+            if (countText != null)
+                countText.gameObject.SetActive(false);
+            if (durabilitySlider != null)
+                durabilitySlider.gameObject.SetActive(false);
+        }
     }
 
-    public void SetTool(InventoryItem item)
+    public void OnPointerEnter(PointerEventData eventData)
     {
-        var obj = Instantiate(inventory.toolSlotPrefab, transform);
-        obj.GetComponent<ToolSlotUI>().Set(item.data as ToolData, item.durability);
+        var slot = inventory.slots[SlotIndex];
+        if (slot.IsEmpty) return;
+
+        ItemTooltipUI.Instance.Show(slot.item.data, slot.item);
     }
 
-    //==============================================================
-    // DRAG START
-    //==============================================================
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        ItemTooltipUI.Instance.Hide();
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        var slot = inventory.slots[SlotIndex];
+        if (slot.IsEmpty) return;
+
+        // SHIFT + leftclick Click = split stack
+        if (InputState.Shift && slot.item.data.stackable)
+        {
+            inventory.SplitStack(SlotIndex);
+        }
+
+    }
+
+
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (inventory.slots[SlotIndex].item == null)
-            return; // don't drag empty slot
+        var slot = inventory.slots[SlotIndex];
+        if (slot.IsEmpty)
+            return;
 
-        // Create a drag icon
+        // ghost icon
         dragIcon = new GameObject("DragIcon", typeof(CanvasGroup), typeof(Image));
         dragIcon.transform.SetParent(canvas.transform, false);
 
         var img = dragIcon.GetComponent<Image>();
-        img.raycastTarget = false; // makes icon ignore input
+        img.raycastTarget = false;
 
-        // Take icon sprite from slot
-        var childImg = GetComponentInChildren<Image>();
-        img.sprite = childImg ? childImg.sprite : null;
+        if (icon != null)
+            img.sprite = icon.sprite;
 
         dragIconRect = dragIcon.GetComponent<RectTransform>();
         dragIconRect.sizeDelta = rect.sizeDelta;
@@ -77,19 +149,12 @@ public class InventorySlotUI : MonoBehaviour,
         canvasGroup.blocksRaycasts = false;
     }
 
-    //==============================================================
-    // DRAGGING
-    //==============================================================
     public void OnDrag(PointerEventData eventData)
     {
-        if (dragIcon == null) return;
-
+        if (dragIconRect == null) return;
         dragIconRect.position = eventData.position;
     }
 
-    //==============================================================
-    // DRAG END
-    //==============================================================
     public void OnEndDrag(PointerEventData eventData)
     {
         canvasGroup.alpha = 1f;
@@ -99,14 +164,10 @@ public class InventorySlotUI : MonoBehaviour,
             Destroy(dragIcon);
     }
 
-    //==============================================================
-    // WHEN DROPPED ON ANOTHER SLOT
-    //==============================================================
     public void OnDrop(PointerEventData eventData)
     {
-        var dragged = eventData.pointerDrag.GetComponent<InventorySlotUI>();
+        var dragged = eventData.pointerDrag?.GetComponent<InventorySlotUI>();
         if (dragged == null) return;
-
         if (dragged.SlotIndex == SlotIndex) return;
 
         InventoryUIEvents.OnSlotSwap?.Invoke(dragged.SlotIndex, SlotIndex);

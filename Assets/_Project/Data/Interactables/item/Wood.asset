@@ -9,11 +9,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 276bc6f5a6b8e6e4e800c7d3561490a1, type: 3}
+  m_Script: {fileID: 11500000, guid: 318c6fbf799bb3d459ef182cdda24eb9, type: 3}
   m_Name: Wood
-  m_EditorClassIdentifier: Assembly-CSharp::MaterialData
-  itemName: Wood
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  id: Material_wood
+  displayName: Wood
+  description: Material used for crafting
   icon: {fileID: 21300000, guid: 6a1c73ab1d2bb3549ae0e734d72ca986, type: 3}
-  infoText: Pick Up
-  droppedPrefab: {fileID: 3374527307995121708, guid: 7fccb68efdf061f4babdd57a49ed0e6c, type: 3}
   handPrefab: {fileID: 3374527307995121708, guid: 2e74b8406fb316441ae8350677909d6f, type: 3}
+  worldPrefab: {fileID: 3374527307995121708, guid: 7fccb68efdf061f4babdd57a49ed0e6c, type: 3}
+  category: 1
+  stackable: 1
+  maxStack: 15
+  hasDurability: 0
+  maxDurability: 100

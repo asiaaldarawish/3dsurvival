@@ -1,161 +1,138 @@
-using UnityEngine;
-using System.Collections.Generic;
+﻿using UnityEngine;
 using System;
-
-
 
 public static class InventoryEvents
 {
-    public static Action<MaterialData> OnMaterialCollected;
-    public static Action<ToolData> OnToolCollected;
+    public static Action<ItemData, int> OnItemCollected;
 
 }
-
 
 public class InventoryManager : MonoBehaviour
 {
     [Header("UI")]
-    [SerializeField] private InventorySlotUI[] uiSlots;    // 22 slots in inspector
-    [SerializeField] public GameObject materialSlotPrefab;
-    [SerializeField] public GameObject toolSlotPrefab;
+    [SerializeField] private InventorySlotUI[] uiSlots;
 
     [Header("Data")]
-    public InventorySlot[] slots = new InventorySlot[22];
+    [SerializeField] private int inventorySize = 16;
+    public InventoryModel Model { get; private set; }
 
+    // For backward compatibility with other scripts using inventory.slots
+    public InventorySlot[] slots => Model.Slots;
+
+    [Header("Input")]
+    [SerializeField] private InputReader inputReader;
+    [SerializeField] private GameObject inventoryUI;
 
     public static event Action OnInventoryChanged;
 
-    [SerializeField] public InputReader inputReader;
-    [SerializeField] private GameObject inventoryUI;
     private bool isOpen = false;
-
 
     private void Awake()
     {
-        // init backend slots
-        for (int i = 0; i < slots.Length; i++)
-            slots[i] = new InventorySlot();
+        Model = new InventoryModel(inventorySize);
 
-        // wire UI slots
+        // wire UI slots once
         for (int i = 0; i < uiSlots.Length; i++)
         {
             uiSlots[i].SlotIndex = i;
             uiSlots[i].inventory = this;
+            uiSlots[i].Clear();
         }
 
-        RefreshUI();
+        if (inventoryUI != null)
+            inventoryUI.SetActive(false);
+
+        // subscribe to model events
+        Model.OnSlotChanged += HandleSlotChanged;
+        Model.OnInventoryChanged += HandleInventoryChanged;
+
+        // initial paint
+        RefreshAllSlots();
     }
 
     private void OnEnable()
     {
-        inputReader.OnInventoryToggle += ToggleInventory;
-        InventoryEvents.OnMaterialCollected += AddMaterial;
-        InventoryEvents.OnToolCollected += AddTool;
-        InventoryUIEvents.OnSlotSwap += SwapSlots;
+        InventoryEvents.OnItemCollected += HandleItemCollected;
+        InventoryUIEvents.OnSlotSwap += HandleSlotSwap;
+
+        if (inputReader != null)
+            inputReader.OnInventoryToggle += ToggleInventory;
     }
 
     private void OnDisable()
     {
-        inputReader.OnInventoryToggle -= ToggleInventory;
-        InventoryEvents.OnMaterialCollected -= AddMaterial;
-        InventoryEvents.OnToolCollected -= AddTool;
-        InventoryUIEvents.OnSlotSwap -= SwapSlots;
+        InventoryEvents.OnItemCollected -= HandleItemCollected;
+        InventoryUIEvents.OnSlotSwap -= HandleSlotSwap;
+
+        if (inputReader != null)
+            inputReader.OnInventoryToggle -= ToggleInventory;
+
+        // optional: unsubscribe model events if you ever recreate Model
+        Model.OnSlotChanged -= HandleSlotChanged;
+        Model.OnInventoryChanged -= HandleInventoryChanged;
     }
 
-    private void AddMaterial(MaterialData data)
-    {
-        Debug.Log($"Adding material: {data.name}");
-
-        // Try stack with existing same material
-        for (int i = 0; i < slots.Length; i++)
-        {
-            var slot = slots[i];
-            if (slot.item != null && slot.item.data == data)
-            {
-                slot.item.count++;
-                RefreshUI();
-                return;
-            }
-        }
-
-        // Otherwise, find an empty slot
-        for (int i = 0; i < slots.Length; i++)
-        {
-            if (slots[i].item == null)
-            {
-                slots[i].item = new InventoryItem
-                {
-                    data = data,
-                    count = 1
-                };
-
-                RefreshUI();
-                return;
-            }
-        }
-
-        Debug.LogWarning("Inventory full, cannot add material.");
-    }
-
-    private void AddTool(ToolData data)
-    {
-        Debug.Log($"Adding tool: {data.name}");
-
-        for (int i = 0; i < slots.Length; i++)
-        {
-            if (slots[i].item == null)
-            {
-                slots[i].item = new InventoryItem
-                {
-                    data = data,
-                    durability = data.durability
-                };
-
-                RefreshUI();
-                return;
-            }
-        }
-
-        Debug.LogWarning("Inventory full, cannot add tool.");
-    }
-
-    private void SwapSlots(int from, int to)
-    {
-        var temp = slots[from].item;
-        slots[from].item = slots[to].item;
-        slots[to].item = temp;
-
-        RefreshUI();
-    }
-
-    public void RefreshUI()
-    {
-        for (int i = 0; i < uiSlots.Length; i++)
-        {
-            var ui = uiSlots[i];
-            var slot = slots[i];
-
-            ui.Clear();
-
-            if (slot.item == null)
-                continue;
-
-            if (slot.item.data is MaterialData)
-                ui.SetMaterial(slot.item);
-            else if (slot.item.data is ToolData)
-                ui.SetTool(slot.item);
-        }
-
-
-        OnInventoryChanged?.Invoke();
-
-    }
-
-    public void ToggleInventory()
+    
+    private void ToggleInventory()
     {
         isOpen = !isOpen;
-        inventoryUI.SetActive(isOpen);
 
+        if (inventoryUI != null)
+            inventoryUI.SetActive(isOpen);
+
+        if (isOpen)
+            RefreshAllSlots(); // just in case something changed while closed
     }
+
+    
+    private void HandleItemCollected(ItemData data, int amount)
+    {
+        int leftover = Model.AddItem(data, amount);
+        if (leftover > 0)
+        {
+            Debug.Log($"Inventory full, couldn't add all of {data.displayName}. Left: {leftover}");
+        }
+    }
+
+    private void HandleSlotSwap(int from, int to)
+    {
+        Model.SwapSlots(from, to);
+    }
+
+    private void HandleSlotChanged(int index)
+    {
+        UpdateSlotUI(index);
+    }
+
+    private void HandleInventoryChanged()
+    {
+        // forward to other systems (Hotbar, OnHand, etc.)
+        OnInventoryChanged?.Invoke();
+    }
+
+    
+    public void RefreshAllSlots()
+    {
+        for (int i = 0; i < uiSlots.Length; i++)
+            UpdateSlotUI(i);
+
+        // also notify others that a full refresh happened
+        HandleInventoryChanged();
+    }
+
+    private void UpdateSlotUI(int index)
+    {
+        if (index < 0 || index >= uiSlots.Length) return;
+        uiSlots[index].SetItem(Model.Slots[index].item);
+    }
+
+    public void SplitStack(int index)
+    {
+        if (Model.SplitStack(index))
+            return;
+
+        Debug.Log("No space to split stack.");
+    }
+
 
 }

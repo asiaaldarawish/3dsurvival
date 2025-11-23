@@ -6,7 +6,7 @@ public class HotbarUI : MonoBehaviour
     [Header("Refs")]
     [SerializeField] private InputReader inputReader;
     [SerializeField] private InventoryManager inventory;
-    [SerializeField] private InventorySlotUI[] hotbarSlots;
+    [SerializeField] private HotbarSlotUI[] hotbarSlots; // size 6
     [SerializeField] private RectTransform highlight;
 
     public int currentIndex = 0;
@@ -14,13 +14,17 @@ public class HotbarUI : MonoBehaviour
 
     private void OnEnable()
     {
-        inputReader.OnHotbarSelect += SelectSlot;
+        if (inputReader != null)
+            inputReader.OnHotbarSelect += SelectSlot;
+
         InventoryManager.OnInventoryChanged += RefreshHotbar;
     }
 
     private void OnDisable()
     {
-        inputReader.OnHotbarSelect -= SelectSlot;
+        if (inputReader != null)
+            inputReader.OnHotbarSelect -= SelectSlot;
+
         InventoryManager.OnInventoryChanged -= RefreshHotbar;
     }
 
@@ -28,29 +32,27 @@ public class HotbarUI : MonoBehaviour
     {
         RefreshHotbar();
         UpdateHighlight();
+        OnHotbarChanged?.Invoke(currentIndex);
     }
 
     public void SelectSlot(int index)
     {
+        if (index < 0 || index >= hotbarSlots.Length) return;
+
         currentIndex = index;
         UpdateHighlight();
-
         OnHotbarChanged?.Invoke(index);
     }
 
     public void RefreshHotbar()
     {
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < hotbarSlots.Length; i++)
         {
-            hotbarSlots[i].Clear();
-
-            var slot = inventory.slots[i];
-            if (slot.item == null) continue;
-
-            if (slot.item.data is MaterialData)
-                hotbarSlots[i].SetMaterial(slot.item);
+            var slotData = inventory.slots[i];
+            if (slotData.IsEmpty)
+                hotbarSlots[i].SetItem(null);
             else
-                hotbarSlots[i].SetTool(slot.item);
+                hotbarSlots[i].SetItem(slotData.item);
         }
 
         UpdateHighlight();
@@ -58,6 +60,9 @@ public class HotbarUI : MonoBehaviour
 
     private void UpdateHighlight()
     {
-        highlight.position = hotbarSlots[currentIndex].transform.position;
+        if (highlight != null && currentIndex >= 0 && currentIndex < hotbarSlots.Length)
+        {
+            highlight.position = hotbarSlots[currentIndex].transform.position;
+        }
     }
 }

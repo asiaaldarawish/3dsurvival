@@ -235,6 +235,24 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": ""Press(behavior=2)"",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""leftShiftKey"",
+                    ""type"": ""Button"",
+                    ""id"": ""31cd4822-c9e4-40d5-aa23-622ab76d7508"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": ""Press(behavior=2)"",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""rightButton"",
+                    ""type"": ""Button"",
+                    ""id"": ""8f8267fd-84e5-4f3b-90c1-854d604aca38"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": ""Press(behavior=2)"",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -697,6 +715,28 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": "";Keyboard&Mouse"",
                     ""action"": ""Inventory"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""ccfa5a10-7a39-4669-9546-f0bb7ef83e8a"",
+                    ""path"": ""<Keyboard>/leftShift"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""leftShiftKey"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""460cd513-5c82-4b06-a77c-d9f21b9886d5"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""rightButton"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1300,6 +1340,8 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         m_Gameplay_Hotbar4 = m_Gameplay.FindAction("Hotbar4", throwIfNotFound: true);
         m_Gameplay_Hotbar5 = m_Gameplay.FindAction("Hotbar5", throwIfNotFound: true);
         m_Gameplay_Hotbar6 = m_Gameplay.FindAction("Hotbar6", throwIfNotFound: true);
+        m_Gameplay_leftShiftKey = m_Gameplay.FindAction("leftShiftKey", throwIfNotFound: true);
+        m_Gameplay_rightButton = m_Gameplay.FindAction("rightButton", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1409,6 +1451,8 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Gameplay_Hotbar4;
     private readonly InputAction m_Gameplay_Hotbar5;
     private readonly InputAction m_Gameplay_Hotbar6;
+    private readonly InputAction m_Gameplay_leftShiftKey;
+    private readonly InputAction m_Gameplay_rightButton;
     /// <summary>
     /// Provides access to input actions defined in input action map "Gameplay".
     /// </summary>
@@ -1485,6 +1529,14 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @Hotbar6 => m_Wrapper.m_Gameplay_Hotbar6;
         /// <summary>
+        /// Provides access to the underlying input action "Gameplay/leftShiftKey".
+        /// </summary>
+        public InputAction @leftShiftKey => m_Wrapper.m_Gameplay_leftShiftKey;
+        /// <summary>
+        /// Provides access to the underlying input action "Gameplay/rightButton".
+        /// </summary>
+        public InputAction @rightButton => m_Wrapper.m_Gameplay_rightButton;
+        /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
         public InputActionMap Get() { return m_Wrapper.m_Gameplay; }
@@ -1558,6 +1610,12 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Hotbar6.started += instance.OnHotbar6;
             @Hotbar6.performed += instance.OnHotbar6;
             @Hotbar6.canceled += instance.OnHotbar6;
+            @leftShiftKey.started += instance.OnLeftShiftKey;
+            @leftShiftKey.performed += instance.OnLeftShiftKey;
+            @leftShiftKey.canceled += instance.OnLeftShiftKey;
+            @rightButton.started += instance.OnRightButton;
+            @rightButton.performed += instance.OnRightButton;
+            @rightButton.canceled += instance.OnRightButton;
         }
 
         /// <summary>
@@ -1617,6 +1675,12 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Hotbar6.started -= instance.OnHotbar6;
             @Hotbar6.performed -= instance.OnHotbar6;
             @Hotbar6.canceled -= instance.OnHotbar6;
+            @leftShiftKey.started -= instance.OnLeftShiftKey;
+            @leftShiftKey.performed -= instance.OnLeftShiftKey;
+            @leftShiftKey.canceled -= instance.OnLeftShiftKey;
+            @rightButton.started -= instance.OnRightButton;
+            @rightButton.performed -= instance.OnRightButton;
+            @rightButton.canceled -= instance.OnRightButton;
         }
 
         /// <summary>
@@ -2029,6 +2093,20 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnHotbar6(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "leftShiftKey" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnLeftShiftKey(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "rightButton" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnRightButton(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.

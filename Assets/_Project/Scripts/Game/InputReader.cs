@@ -7,6 +7,12 @@ using UnityEngine.InputSystem;
 /// No direct gameplay logic here — only input -> events.
 /// </summary>
 
+public static class InputState
+{
+    public static bool Shift;
+    public static bool RightMouse;
+}
+
 [DisallowMultipleComponent]
 public class InputReader : MonoBehaviour
 {
@@ -30,6 +36,8 @@ public class InputReader : MonoBehaviour
     public event Action<int> OnHotbarSelect = delegate { };
     public event Action OnInventoryToggle = delegate { };
 
+    public event Action<bool> OnRightClick; // pressed = true, released = false
+    public event Action<bool> OnShift;      // pressed = true, released = false
 
 
     private void Awake()
@@ -71,6 +79,31 @@ public class InputReader : MonoBehaviour
         actions.Gameplay.Hotbar5.performed += ctx => OnHotbarSelect(4);
         actions.Gameplay.Hotbar6.performed += ctx => OnHotbarSelect(5);
 
+
+        actions.Gameplay.rightButton.performed += ctx =>
+        {
+            InputState.RightMouse = true;
+            OnRightClick?.Invoke(true);
+        };
+
+        actions.Gameplay.rightButton.canceled += ctx =>
+        {
+            InputState.RightMouse = false;
+            OnRightClick?.Invoke(false);
+        };
+
+        actions.Gameplay.leftShiftKey.performed += ctx =>
+        {
+            InputState.Shift = true;
+            OnShift?.Invoke(true);
+        };
+
+        actions.Gameplay.leftShiftKey.canceled += ctx =>
+        {
+            InputState.Shift = false;
+            OnShift?.Invoke(false);
+        };
+
     }
 
     private void OnDisable()
@@ -84,6 +117,33 @@ public class InputReader : MonoBehaviour
 
         actions.Gameplay.Zoom.performed -= HandleZoom;
         actions.Gameplay.Zoom.canceled -= HandleZoom;
+
+
+        // Button callbacks
+        actions.Gameplay.Jump.performed -= ctx => OnJump();
+        actions.Gameplay.Sprint.performed -= ctx => OnSprint(true);
+        actions.Gameplay.Sprint.canceled -= ctx => OnSprint(false);
+        actions.Gameplay.Interact.performed -= ctx => OnInteract();
+        actions.Gameplay.Place.performed -= ctx => OnPlace();
+        actions.Gameplay.Attack.performed -= ctx => OnAttack();
+        actions.Gameplay.Pause.performed -= ctx => OnPause();
+        actions.Gameplay.Inventory.performed -= ctx => OnInventoryToggle();
+
+
+
+        actions.Gameplay.Hotbar1.performed -= ctx => OnHotbarSelect(0);
+        actions.Gameplay.Hotbar2.performed -= ctx => OnHotbarSelect(1);
+        actions.Gameplay.Hotbar3.performed -= ctx => OnHotbarSelect(2);
+        actions.Gameplay.Hotbar4.performed -= ctx => OnHotbarSelect(3);
+        actions.Gameplay.Hotbar5.performed -= ctx => OnHotbarSelect(4);
+        actions.Gameplay.Hotbar6.performed -= ctx => OnHotbarSelect(5);
+
+
+        actions.Gameplay.rightButton.performed -= ctx => OnRightClick?.Invoke(true);
+        actions.Gameplay.rightButton.canceled -= ctx => OnRightClick?.Invoke(false);
+
+        actions.Gameplay.leftShiftKey.performed -= ctx => OnShift?.Invoke(true);
+        actions.Gameplay.leftShiftKey.canceled -= ctx => OnShift?.Invoke(false);
 
         actions.Gameplay.Disable();
     }
@@ -102,6 +162,8 @@ public class InputReader : MonoBehaviour
     {
         OnZoom(ctx.ReadValue<float>());
     }
+
+    
 
     public void SetEnabled(bool enabled)
     {

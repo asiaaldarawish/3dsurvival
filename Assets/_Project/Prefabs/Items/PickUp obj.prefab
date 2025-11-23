@@ -126,7 +126,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 615c08efbb5ec4f45be503585dd53f8d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InteractableObject
-  data: {fileID: 11400000, guid: 40088d159a53af0449fcf8239f00b476, type: 2}
+  itemData: {fileID: 11400000, guid: 0bdbf0861acaf32499cb7c1a97cf46f0, type: 2}
+  amount: 1
 --- !u!54 &3123219630921732335
 Rigidbody:
   m_ObjectHideFlags: 0

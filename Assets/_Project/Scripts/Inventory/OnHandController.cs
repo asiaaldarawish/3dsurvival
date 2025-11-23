@@ -25,39 +25,28 @@ public class OnHandController : MonoBehaviour
         UpdateHandFromCurrentHotbar();
     }
 
-    // ============================
-    // HOTBAR EVENT → needs an int
-    // ============================
     private void UpdateHandItemByIndex(int index)
     {
         UpdateHandItem(index);
     }
 
-    // ============================================
-    // INVENTORY CHANGE → use current hotbar index
-    // ============================================
     private void UpdateHandFromCurrentHotbar()
     {
         UpdateHandItem(hotbar.currentIndex);
     }
 
-    // ======================================
-    // THE REAL LOGIC (shared by both events)
-    // ======================================
     private void UpdateHandItem(int index)
     {
-        Destroy(currentHeld);
+        if (currentHeld != null)
+            Destroy(currentHeld);
 
         var slot = inventory.slots[index];
-        if (slot.item == null)
+        if (slot.IsEmpty)
             return;
 
         var data = slot.item.data;
 
-        GameObject prefab = null;
-
-        if (data is MaterialData mat) prefab = mat.handPrefab;
-        else if (data is ToolData tool) prefab = tool.handPrefab;
+        GameObject prefab = data.handPrefab;
 
         if (prefab != null)
         {
@@ -66,4 +55,5 @@ public class OnHandController : MonoBehaviour
             currentHeld.transform.localRotation = Quaternion.identity;
         }
     }
+
 }
