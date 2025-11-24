@@ -28,12 +28,18 @@ public class InteractionUI : MonoBehaviour
 
     private void Show(string info)
     {
-        text.text = info;
-        text.gameObject.SetActive(true);
+        if (text != null)
+        {
+            text.text = info;
+            text.gameObject.SetActive(true);
+        }
     }
 
     private void Hide()
     {
-        text.gameObject.SetActive(false);
+        if (text != null)
+        {
+            text.gameObject.SetActive(false);
+        }
     }
 }

@@ -6,7 +6,6 @@ public class InventoryModel
 {
     public InventorySlot[] Slots { get; private set; }
 
-    // NEW
     private Dictionary<ItemData, List<int>> itemIndexMap;
     private Queue<int> freeSlots;
 
@@ -23,11 +22,10 @@ public class InventoryModel
         for (int i = 0; i < size; i++)
         {
             Slots[i] = new InventorySlot();
-            freeSlots.Enqueue(i); // all empty at start
+            freeSlots.Enqueue(i);
         }
     }
 
-    // Add a certain amount of an item. Returns leftover (if inventory full)
     public int AddItem(ItemData data, int amount)
     {
         if (data == null || amount <= 0)
@@ -35,7 +33,7 @@ public class InventoryModel
 
         int remaining = amount;
 
-        // STACK INTO existing stacks 
+        // Stack into existing stacks
         if (data.stackable && itemIndexMap.TryGetValue(data, out var indices))
         {
             for (int i = 0; i < indices.Count && remaining > 0; i++)
@@ -48,16 +46,17 @@ public class InventoryModel
 
                 int toAdd = Mathf.Min(spaceLeft, remaining);
                 slot.item.count += toAdd;
-
                 remaining -= toAdd;
+
                 OnSlotChanged?.Invoke(idx);
             }
         }
 
-        // PLACE INTO NEW SLOTS
+        // Fill new slots
         while (remaining > 0 && freeSlots.Count > 0)
         {
             int idx = freeSlots.Dequeue();
+
             int toPut = data.stackable
                 ? Mathf.Min(remaining, data.maxStack)
                 : 1;
@@ -65,13 +64,12 @@ public class InventoryModel
             Slots[idx].item = new InventoryItem
             {
                 data = data,
-                count = toPut,
+                count = data.stackable ? toPut : 1,
                 durability = data.hasDurability ? data.maxDurability : 0
             };
 
             remaining -= toPut;
 
-            // track where this item lives
             if (!itemIndexMap.ContainsKey(data))
                 itemIndexMap[data] = new List<int>();
 
@@ -83,7 +81,6 @@ public class InventoryModel
         OnInventoryChanged?.Invoke();
         return remaining;
     }
-
 
     public void SwapSlots(int from, int to)
     {
@@ -102,7 +99,6 @@ public class InventoryModel
 
     public bool SplitStack(int index)
     {
-        // validate
         if (index < 0 || index >= Slots.Length) return false;
 
         var slot = Slots[index];
@@ -111,32 +107,38 @@ public class InventoryModel
         var item = slot.item;
         if (!item.data.stackable || item.count < 2) return false;
 
-        // calculate half
         int half = item.count / 2;
         item.count -= half;
 
-        // find empty slot
-        for (int i = 0; i < Slots.Length; i++)
+        // find free slot
+        while (freeSlots.Count > 0)
         {
-            if (Slots[i].IsEmpty)
-            {
-                Slots[i].item = new InventoryItem
-                {
-                    data = item.data,
-                    count = half,
-                    durability = item.durability
-                };
+            int idx = freeSlots.Dequeue();
 
-                OnSlotChanged?.Invoke(index);
-                OnSlotChanged?.Invoke(i);
-                OnInventoryChanged?.Invoke();
-                return true;
+            if (!Slots[idx].IsEmpty) continue;
+
+            Slots[idx].item = new InventoryItem
+            {
+                data = item.data,
+                count = half,
+                durability = item.durability
+            };
+
+            // track in index map
+            if (!itemIndexMap.TryGetValue(item.data, out var list))
+            {
+                list = new List<int>();
+                itemIndexMap[item.data] = list;
             }
+            list.Add(idx);
+
+            OnSlotChanged?.Invoke(index);
+            OnSlotChanged?.Invoke(idx);
+            OnInventoryChanged?.Invoke();
+            return true;
         }
 
-        // no empty slot available
+        // no free slot available
         return false;
     }
-
-
 }

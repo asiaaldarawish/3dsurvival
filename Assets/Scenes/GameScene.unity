@@ -93,7 +93,7 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 20201, guid: 0000000000000000f000000000000000, type: 0}
+  m_LightingDataAsset: {fileID: 112000002, guid: b963bafb682d5af45ad06a29f234a625, type: 2}
   m_LightingSettings: {fileID: 0}
 --- !u!196 &4
 NavMeshSettings:
@@ -913,7 +913,6 @@ GameObject:
   - component: {fileID: 152734997}
   - component: {fileID: 152734998}
   - component: {fileID: 152734999}
-  - component: {fileID: 152735000}
   m_Layer: 0
   m_Name: InventoryManager
   m_TagString: Untagged
@@ -948,26 +947,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 612aadf9d8181664fa3327c604205dbc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventoryManager
-  uiSlots:
-  - {fileID: 785696161}
-  - {fileID: 1356014469}
-  - {fileID: 310156069}
-  - {fileID: 413911122}
-  - {fileID: 292241996}
-  - {fileID: 1850828955}
-  - {fileID: 1843181219}
-  - {fileID: 1601282175}
-  - {fileID: 448175895}
-  - {fileID: 212763775}
-  - {fileID: 2060914343}
-  - {fileID: 1746229453}
-  - {fileID: 724205953}
-  - {fileID: 442616089}
-  - {fileID: 1243997291}
-  - {fileID: 1905450714}
   inventorySize: 16
   inputReader: {fileID: 463376568}
-  inventoryUI: {fileID: 811084489}
+  inventoryUIManager: {fileID: 166291280}
 --- !u!114 &152734999
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -982,30 +964,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::OnHandController
   handPoint: {fileID: 578475674}
   inventory: {fileID: 152734998}
-  hotbar: {fileID: 152735000}
---- !u!114 &152735000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 152734995}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 403ead74a887c8b4b953aa0ca2fce19b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HotbarUI
-  inputReader: {fileID: 463376568}
-  inventory: {fileID: 152734998}
-  hotbarSlots:
-  - {fileID: 1570277415}
-  - {fileID: 486613153}
-  - {fileID: 681995715}
-  - {fileID: 1170510789}
-  - {fileID: 1003314841}
-  - {fileID: 366655759}
-  highlight: {fileID: 556865359}
-  currentIndex: 0
+  hotbar: {fileID: 166291281}
 --- !u!1 &156535631
 GameObject:
   m_ObjectHideFlags: 0
@@ -1052,8 +1011,10 @@ GameObject:
   m_Component:
   - component: {fileID: 166291278}
   - component: {fileID: 166291279}
+  - component: {fileID: 166291280}
+  - component: {fileID: 166291281}
   m_Layer: 0
-  m_Name: Manager
+  m_Name: UIManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1087,6 +1048,59 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InteractionUI
   text: {fileID: 627646500}
+--- !u!114 &166291280
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 166291277}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ef82a1130ac3864d9757b5c7199d9fa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InventoryUIManager
+  inventoryPanel: {fileID: 811084489}
+  uiSlots:
+  - {fileID: 785696161}
+  - {fileID: 1356014469}
+  - {fileID: 310156069}
+  - {fileID: 413911122}
+  - {fileID: 292241996}
+  - {fileID: 1850828955}
+  - {fileID: 1843181219}
+  - {fileID: 1601282175}
+  - {fileID: 448175895}
+  - {fileID: 212763775}
+  - {fileID: 2060914343}
+  - {fileID: 1746229453}
+  - {fileID: 724205953}
+  - {fileID: 442616089}
+  - {fileID: 1243997291}
+  - {fileID: 1905450714}
+--- !u!114 &166291281
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 166291277}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 403ead74a887c8b4b953aa0ca2fce19b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HotbarUI
+  inputReader: {fileID: 463376568}
+  inventory: {fileID: 152734998}
+  hotbarSlots:
+  - {fileID: 1570277415}
+  - {fileID: 486613153}
+  - {fileID: 681995715}
+  - {fileID: 1170510789}
+  - {fileID: 1003314841}
+  - {fileID: 366655759}
+  highlight: {fileID: 556865359}
+  currentIndex: 0
 --- !u!1 &194631146
 GameObject:
   m_ObjectHideFlags: 0
@@ -1304,7 +1318,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
   SlotIndex: 9
-  inventory: {fileID: 152734998}
   icon: {fileID: 1026261312}
   countText: {fileID: 1825882857}
   durabilitySlider: {fileID: 2072098328}
@@ -1779,7 +1792,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
   SlotIndex: 4
-  inventory: {fileID: 152734998}
   icon: {fileID: 880245587}
   countText: {fileID: 2116957634}
   durabilitySlider: {fileID: 1413352696}
@@ -1888,7 +1900,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
   SlotIndex: 2
-  inventory: {fileID: 152734998}
   icon: {fileID: 1296179661}
   countText: {fileID: 1464286}
   durabilitySlider: {fileID: 1898191799}
@@ -2766,7 +2777,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
   SlotIndex: 3
-  inventory: {fileID: 152734998}
   icon: {fileID: 1420521957}
   countText: {fileID: 1673981231}
   durabilitySlider: {fileID: 216966329}
@@ -2875,7 +2885,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
   SlotIndex: 13
-  inventory: {fileID: 152734998}
   icon: {fileID: 1298674497}
   countText: {fileID: 703437439}
   durabilitySlider: {fileID: 891692087}
@@ -3059,7 +3068,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
   SlotIndex: 8
-  inventory: {fileID: 152734998}
   icon: {fileID: 2111131548}
   countText: {fileID: 1703739761}
   durabilitySlider: {fileID: 720283979}
@@ -5453,7 +5461,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
   SlotIndex: 12
-  inventory: {fileID: 152734998}
   icon: {fileID: 584356786}
   countText: {fileID: 715957126}
   durabilitySlider: {fileID: 1547941566}
@@ -5736,7 +5743,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
   SlotIndex: 0
-  inventory: {fileID: 152734998}
   icon: {fileID: 6470262260653817065}
   countText: {fileID: 7896313289452256065}
   durabilitySlider: {fileID: 760651637031341091}
@@ -9429,118 +9435,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1182600605}
   m_CullTransparentMesh: 1
---- !u!1 &1194817297
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1194817301}
-  - component: {fileID: 1194817300}
-  - component: {fileID: 1194817299}
-  - component: {fileID: 1194817298}
-  m_Layer: 0
-  m_Name: Plane
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!64 &1194817298
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1194817297}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
---- !u!23 &1194817299
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1194817297}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &1194817300
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1194817297}
-  m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
---- !u!4 &1194817301
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1194817297}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1197359023
 GameObject:
   m_ObjectHideFlags: 0
@@ -10260,7 +10154,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
   SlotIndex: 14
-  inventory: {fileID: 152734998}
   icon: {fileID: 1150329512}
   countText: {fileID: 2044497438}
   durabilitySlider: {fileID: 993909375}
@@ -11564,7 +11457,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
   SlotIndex: 1
-  inventory: {fileID: 152734998}
   icon: {fileID: 1453969072}
   countText: {fileID: 1664529513}
   durabilitySlider: {fileID: 969795018}
@@ -12741,7 +12633,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7522355680988393044, guid: 7fccb68efdf061f4babdd57a49ed0e6c, type: 3}
       propertyPath: amount
-      value: 99
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -13576,7 +13468,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
   SlotIndex: 7
-  inventory: {fileID: 152734998}
   icon: {fileID: 1315381348}
   countText: {fileID: 1011982385}
   durabilitySlider: {fileID: 1673289683}
@@ -14965,7 +14856,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
   SlotIndex: 11
-  inventory: {fileID: 152734998}
   icon: {fileID: 1740170157}
   countText: {fileID: 587825692}
   durabilitySlider: {fileID: 1783108607}
@@ -16050,7 +15940,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
   SlotIndex: 6
-  inventory: {fileID: 152734998}
   icon: {fileID: 610243770}
   countText: {fileID: 1750752649}
   durabilitySlider: {fileID: 2007314404}
@@ -16159,7 +16048,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
   SlotIndex: 5
-  inventory: {fileID: 152734998}
   icon: {fileID: 61150007}
   countText: {fileID: 1700396232}
   durabilitySlider: {fileID: 90919568}
@@ -16544,7 +16432,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
   SlotIndex: 15
-  inventory: {fileID: 152734998}
   icon: {fileID: 1305709073}
   countText: {fileID: 1594082621}
   durabilitySlider: {fileID: 1475237895}
@@ -17329,7 +17216,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
   SlotIndex: 10
-  inventory: {fileID: 152734998}
   icon: {fileID: 1589077242}
   countText: {fileID: 1182600607}
   durabilitySlider: {fileID: 314142293}
@@ -18601,4 +18487,3 @@ SceneRoots:
   - {fileID: 1227100785}
   - {fileID: 141187774}
   - {fileID: 1754924130}
-  - {fileID: 1194817301}

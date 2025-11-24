@@ -1,14 +1,9 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using System;
 using TMPro;
-
-public static class InventoryUIEvents
-{
-    public static Action<int, int> OnSlotSwap;
-}
-
+using UnityEngine.InputSystem;
+using System;
 
 public class InventorySlotUI : MonoBehaviour,
     IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler,
@@ -16,7 +11,7 @@ public class InventorySlotUI : MonoBehaviour,
 {
     [Header("Refs")]
     public int SlotIndex;
-    public InventoryManager inventory;
+    private InventoryManager inventory;
 
     [SerializeField] private Image icon;
     [SerializeField] private TextMeshProUGUI countText;
@@ -26,9 +21,13 @@ public class InventorySlotUI : MonoBehaviour,
     private CanvasGroup canvasGroup;
     private RectTransform rect;
 
-    // drag ghost
     private GameObject dragIcon;
     private RectTransform dragIconRect;
+
+    public void Bind(InventoryManager inv)
+    {
+        inventory = inv;
+    }
 
     private void Awake()
     {
@@ -64,7 +63,6 @@ public class InventorySlotUI : MonoBehaviour,
             icon.enabled = true;
         }
 
-        // Stackable item (materials, resources, maybe potions)
         if (data.stackable)
         {
             if (countText != null)
@@ -76,7 +74,6 @@ public class InventorySlotUI : MonoBehaviour,
             if (durabilitySlider != null)
                 durabilitySlider.gameObject.SetActive(false);
         }
-        // Non-stackable with durability (tools, gear)
         else if (data.hasDurability)
         {
             if (countText != null)
@@ -91,7 +88,6 @@ public class InventorySlotUI : MonoBehaviour,
         }
         else
         {
-            // Non-stackable, no durability (e.g. quest item, document, potion)
             if (countText != null)
                 countText.gameObject.SetActive(false);
             if (durabilitySlider != null)
@@ -99,6 +95,7 @@ public class InventorySlotUI : MonoBehaviour,
         }
     }
 
+    // TOOLTIP
     public void OnPointerEnter(PointerEventData eventData)
     {
         var slot = inventory.slots[SlotIndex];
@@ -112,27 +109,25 @@ public class InventorySlotUI : MonoBehaviour,
         ItemTooltipUI.Instance.Hide();
     }
 
+    // CLICK (Split Stack)
     public void OnPointerClick(PointerEventData eventData)
     {
         var slot = inventory.slots[SlotIndex];
         if (slot.IsEmpty) return;
 
-        // SHIFT + leftclick Click = split stack
+        // Left click + Shift = split stack
         if (InputState.Shift && slot.item.data.stackable)
         {
             inventory.SplitStack(SlotIndex);
         }
-
     }
 
-
+    // DRAG & DROP
     public void OnBeginDrag(PointerEventData eventData)
     {
         var slot = inventory.slots[SlotIndex];
-        if (slot.IsEmpty)
-            return;
+        if (slot.IsEmpty) return;
 
-        // ghost icon
         dragIcon = new GameObject("DragIcon", typeof(CanvasGroup), typeof(Image));
         dragIcon.transform.SetParent(canvas.transform, false);
 
@@ -173,3 +168,10 @@ public class InventorySlotUI : MonoBehaviour,
         InventoryUIEvents.OnSlotSwap?.Invoke(dragged.SlotIndex, SlotIndex);
     }
 }
+
+public static class InventoryUIEvents
+{
+    public static Action<int, int> OnSlotSwap;
+}
+
+

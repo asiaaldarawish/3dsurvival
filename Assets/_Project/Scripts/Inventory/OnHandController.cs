@@ -51,8 +51,8 @@ public class OnHandController : MonoBehaviour
         if (prefab != null)
         {
             currentHeld = Instantiate(prefab, handPoint);
-            currentHeld.transform.localPosition = Vector3.zero;
-            currentHeld.transform.localRotation = Quaternion.identity;
+            currentHeld.transform.localPosition = prefab.transform.position;
+            currentHeld.transform.localRotation = prefab.transform.rotation;
         }
     }
 

@@ -16,8 +16,8 @@ MonoBehaviour:
   displayName: Wood
   description: Material used for crafting
   icon: {fileID: 21300000, guid: 6a1c73ab1d2bb3549ae0e734d72ca986, type: 3}
-  handPrefab: {fileID: 3374527307995121708, guid: 2e74b8406fb316441ae8350677909d6f, type: 3}
-  worldPrefab: {fileID: 3374527307995121708, guid: 7fccb68efdf061f4babdd57a49ed0e6c, type: 3}
+  handPrefab: {fileID: 1298283038291357339, guid: 0138e96bb782ac047ae97c0171360cd0, type: 3}
+  worldPrefab: {fileID: 5788968203525986472, guid: f8ccaa39b2ab7414796d8eaab4b7bb81, type: 3}
   category: 1
   stackable: 1
   maxStack: 15
