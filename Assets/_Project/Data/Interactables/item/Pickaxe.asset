@@ -10,19 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 318c6fbf799bb3d459ef182cdda24eb9, type: 3}
-  m_Name: Axe
+  m_Name: Pickaxe
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  id: Tool_axe
-  displayName: Axe
-  description: Tool used for collecting wood
-  icon: {fileID: 21300000, guid: b015d1164f5c3194da6d7b8b5ae86262, type: 3}
-  handPrefab: {fileID: 8007775928723290748, guid: 3dc759c2ec0769749baa1652cc33a74a, type: 3}
-  worldPrefab: {fileID: 4272440187080540130, guid: c931376a8227e044e872b1b490be9d97, type: 3}
+  id: Tool_Pickaxe
+  displayName: Pickaxe
+  description: Tool used for collecting Rocks
+  icon: {fileID: 21300000, guid: f252992eab545e5458468d34c6cdd595, type: 3}
+  handPrefab: {fileID: 7645681575253641240, guid: 9f7257a4d48e0d0438a9e95988ced8fe, type: 3}
+  worldPrefab: {fileID: 3816294974638747731, guid: c49a82ff7f26cc14d8fc553c3a6eb808, type: 3}
   category: 2
   stackable: 0
   maxStack: 99
   hasDurability: 1
   maxDurability: 100
-  toolType: 1
+  toolType: 2
   requiredTool: 0
   DropItemData: {fileID: 0}

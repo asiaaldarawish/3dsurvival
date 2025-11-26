@@ -23,6 +23,14 @@ public class ItemData : ScriptableObject
     [Header("Durability (for tools / gear)")]
     public bool hasDurability = false;
     public int maxDurability = 100;
+    public ToolType toolType = ToolType.None;
+
+
+    [Header("Mining Resources")]
+    // Tool requirement for resources
+    public ToolType requiredTool = ToolType.None;
+    public ItemData DropItemData;
+    public string InfoText = "Mine";
 
     // Later add extra data blocks for gear stats / potion effects / etc.
 }
@@ -37,6 +45,14 @@ public enum ItemCategory
     Document,     // papers, scrolls, notes
     Quest,
     Misc
+}
+
+public enum ToolType
+{
+    None,
+    Axe,
+    Pickaxe,
+    Hammer
 }
 
 

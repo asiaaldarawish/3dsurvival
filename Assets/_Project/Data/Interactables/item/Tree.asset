@@ -15,11 +15,15 @@ MonoBehaviour:
   id: Resorce_Tree
   displayName: Tree
   description: a Resorce used for optaining wood
-  icon: {fileID: 21300000, guid: 6a1c73ab1d2bb3549ae0e734d72ca986, type: 3}
-  handPrefab: {fileID: 919132149155446097, guid: 3f85eaed60d226c4f934b14e6b87303b, type: 3}
-  worldPrefab: {fileID: 919132149155446097, guid: 3f85eaed60d226c4f934b14e6b87303b, type: 3}
+  icon: {fileID: 0}
+  handPrefab: {fileID: 0}
+  worldPrefab: {fileID: 0}
   category: 0
   stackable: 0
   maxStack: 99
   hasDurability: 0
   maxDurability: 100
+  toolType: 0
+  requiredTool: 1
+  DropItemData: {fileID: 11400000, guid: 0bdbf0861acaf32499cb7c1a97cf46f0, type: 2}
+  InfoText: Chop!

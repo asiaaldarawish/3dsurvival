@@ -17,9 +17,13 @@ MonoBehaviour:
   description: Collectable Material used for crafting.
   icon: {fileID: 21300000, guid: 38feeed99da4ce249a386271d2a2aa81, type: 3}
   handPrefab: {fileID: 6201417577865561771, guid: dbf0c5f52a85da34ca3bad743b84dd0f, type: 3}
-  worldPrefab: {fileID: 0}
+  worldPrefab: {fileID: 6201417577865561771, guid: 936441e8ad7465e409c2285b778dfd8f, type: 3}
   category: 1
   stackable: 1
   maxStack: 99
   hasDurability: 0
   maxDurability: 100
+  toolType: 0
+  requiredTool: 0
+  DropItemData: {fileID: 0}
+  InfoText: Mine

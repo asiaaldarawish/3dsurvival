@@ -20,27 +20,41 @@ public class InteractableObject : MonoBehaviour, IInteractable
         Destroy(gameObject);
     }
 
-    public string GetInfoText() => "Pick Up";
+    public string GetInfoText(PlayerBootstrap player) => "Pick Up";
 
     public bool CanInteract(PlayerBootstrap p) => !alreadyTaken;
+
+    public void Configure(ItemData data, int count)
+    {
+        itemData = data;
+        amount = count;
+        alreadyTaken = false;
+    }
+
 
     private void OnTriggerEnter(Collider other)
     {
         if (!other.CompareTag("Player")) return;
 
         player = other.GetComponent<PlayerInteractHandler>();
-        player.SetCurrent(this);
 
-        InteractionUIEvents.ShowInteractionText?.Invoke(GetInfoText());
+        if (player == null)
+            player = other.GetComponentInParent<PlayerInteractHandler>();
+
+        if (player != null)
+            player.SetCurrent(this);
     }
 
     private void OnTriggerExit(Collider other)
     {
         if (!other.CompareTag("Player")) return;
 
-        player.ClearCurrent(this);
+        if (player != null)
+            player.ClearCurrent(this);
+
 
         InteractionUIEvents.HideInteractionText?.Invoke();
+
     }
 
 
