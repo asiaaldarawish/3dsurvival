@@ -17,6 +17,8 @@ public class InventoryManager : MonoBehaviour
     [Header("Input")]
     [SerializeField] private InputReader inputReader;
     [SerializeField] private InventoryUIManager inventoryUIManager;
+    [SerializeField] private PlayerMovement playerMovement;
+    [SerializeField] private PlayerCamera playerCamera;
 
     public static event Action OnInventoryChanged;
 
@@ -25,6 +27,12 @@ public class InventoryManager : MonoBehaviour
     private void Awake()
     {
         Model = new InventoryModel(inventorySize);
+
+        if (playerMovement == null)
+            playerMovement = FindFirstObjectByType<PlayerMovement>();
+
+        if (playerCamera == null)
+            playerCamera = FindFirstObjectByType<PlayerCamera>();
 
         // Subscribe to model events
         Model.OnSlotChanged += HandleSlotChanged;
@@ -55,14 +63,10 @@ public class InventoryManager : MonoBehaviour
 
     private void ToggleInventory()
     {
-        isOpen = !isOpen;
-
-        // UI layer handles visuals
-        inventoryUIManager?.SetVisible(isOpen);
-
-        // When opening : refresh UI
         if (isOpen)
-            inventoryUIManager?.RefreshAllSlots();
+            CloseInventoryPanel();
+        else
+            OpenInventoryPanel();
     }
 
 
@@ -96,5 +100,36 @@ public class InventoryManager : MonoBehaviour
         {
             Debug.Log("No space to split stack.");
         }
+    }
+
+
+    public bool IsOpen() => isOpen;
+
+    public void OpenInventoryPanel()
+    {
+        if (isOpen) return;
+
+        isOpen = true;
+        inventoryUIManager?.SetVisible(true);
+        inventoryUIManager?.RefreshAllSlots();
+        TogglePlayerControl(false);
+    }
+
+    public void CloseInventoryPanel()
+    {
+        if (!isOpen) return;
+
+        isOpen = false;
+        inventoryUIManager?.SetVisible(false);
+        TogglePlayerControl(true);
+    }
+
+    private void TogglePlayerControl(bool enabled)
+    {
+        if (playerMovement != null)
+            playerMovement.EnableMovement(enabled);
+
+        if (playerCamera != null)
+            playerCamera.SetLookEnabled(enabled);
     }
 }

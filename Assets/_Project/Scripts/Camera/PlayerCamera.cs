@@ -21,6 +21,7 @@ public class PlayerCamera : MonoBehaviour
 
     private float yaw;
     private float pitch;
+    private bool lookEnabled = true;
 
     private void Awake()
     {
@@ -44,10 +45,17 @@ public class PlayerCamera : MonoBehaviour
 
     public void HandleLook(Vector2 lookInput)
     {
+        if (!lookEnabled) return;
+
         yaw += lookInput.x * sensitivity * Time.deltaTime;
         pitch -= lookInput.y * sensitivity * Time.deltaTime;
         pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
 
         pivot.localRotation = Quaternion.Euler(pitch, yaw, 0f);
+    }
+
+    public void SetLookEnabled(bool enabled)
+    {
+        lookEnabled = enabled;
     }
 }
