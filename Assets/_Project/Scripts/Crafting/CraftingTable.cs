@@ -7,7 +7,6 @@ public class CraftingTable : MonoBehaviour, IInteractable
     [SerializeField] private CraftingManagerUI craftingUI;
     [SerializeField] private InventoryManager inventoryManager;
 
-    private PlayerInteractHandler playerHandler;
     private bool isOpen;
 
     private void Awake()
@@ -28,36 +27,14 @@ public class CraftingTable : MonoBehaviour, IInteractable
         ClosePanel();
     }
 
-    private void OnTriggerEnter(Collider other)
-    {
-        if (!other.CompareTag("Player")) return;
-
-        playerHandler = other.GetComponent<PlayerInteractHandler>();
-
-        if (playerHandler != null)
-            playerHandler.SetCurrent(this);
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (!other.CompareTag("Player")) return;
-
-        if (playerHandler != null)
-            playerHandler.ClearCurrent(this);
-
-        playerHandler = null;
-        InteractionUIEvents.HideInteractionText?.Invoke();
-    }
+    
 
     private void OnDestroy()
     {
-        if (playerHandler != null)
-            playerHandler.ClearCurrent(this);
-
+       
         if (isOpen)
             ClosePanel();
 
-        InteractionUIEvents.HideInteractionText?.Invoke();
     }
 
     public string GetInfoText(PlayerBootstrap player) => "Craft [E]";

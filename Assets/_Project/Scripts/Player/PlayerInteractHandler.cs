@@ -4,6 +4,7 @@ public class PlayerInteractHandler : MonoBehaviour
 {
     private IInteractable current;
     [SerializeField] private PlayerBootstrap player;
+    private readonly System.Collections.Generic.List<IInteractable> interactablesInRange = new();
 
     private void Awake()
     {
@@ -22,19 +23,43 @@ public class PlayerInteractHandler : MonoBehaviour
     private void OnDisable()
     {
         HotbarUI.OnHotbarChanged -= HandleHotbarChanged;
+
+        interactablesInRange.Clear();
+        current = null;
+        InteractionUIEvents.HideInteractionText?.Invoke();
     }
 
-    public void SetCurrent(IInteractable interactable)
+    private void Update()
     {
-        current = interactable;
+        if (!IsUnityNull(current))
+            return;
 
-        RefreshInteractionText();
+        current = null;
+        CleanupInteractables();
+        InteractionUIEvents.HideInteractionText?.Invoke();
     }
 
-    public void ClearCurrent(IInteractable interactable)
+    private void OnTriggerEnter(Collider other)
     {
+        var interactable = other.GetComponentInParent<IInteractable>();
+        if (interactable == null) return;
+
+        if (!interactablesInRange.Contains(interactable))
+            interactablesInRange.Add(interactable);
+
+        UpdateCurrentInteractable();
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        var interactable = other.GetComponentInParent<IInteractable>();
+        if (interactable == null) return;
+
+        interactablesInRange.Remove(interactable);
         if (current == interactable)
             current = null;
+
+        UpdateCurrentInteractable();
     }
 
     public void OnInteract()
@@ -42,6 +67,7 @@ public class PlayerInteractHandler : MonoBehaviour
         if (current != null && current.CanInteract(player))
         {
             current.Interact(player);
+            UpdateCurrentInteractable();
         }
     }
 
@@ -50,6 +76,7 @@ public class PlayerInteractHandler : MonoBehaviour
         if (current is IAttackable attackable && attackable.CanAttack(player))
         {
             attackable.Attack(player);
+            RefreshInteractionText();
         }
     }
 
@@ -58,10 +85,64 @@ public class PlayerInteractHandler : MonoBehaviour
         RefreshInteractionText();
     }
 
+    private void UpdateCurrentInteractable()
+    {
+        CleanupInteractables();
+
+        IInteractable closest = null;
+        float closestDistanceSqr = float.MaxValue;
+
+        foreach (var interactable in interactablesInRange)
+        {
+            if (IsUnityNull(interactable))
+                continue;
+
+            if (interactable is not MonoBehaviour behaviour)
+                continue;
+
+            float distanceSqr = (behaviour.transform.position - player.transform.position).sqrMagnitude;
+            if (distanceSqr < closestDistanceSqr)
+            {
+                closestDistanceSqr = distanceSqr;
+                closest = interactable;
+            }
+        }
+
+        current = closest;
+        RefreshInteractionText();
+    }
+
     private void RefreshInteractionText()
     {
-        if (current == null || player == null) return;
+        if (player == null)
+        {
+            InteractionUIEvents.HideInteractionText?.Invoke();
+            return;
+        }
+
+        if (current == null)
+        {
+            InteractionUIEvents.HideInteractionText?.Invoke();
+            return;
+        }
+
+        if (IsUnityNull(current))
+        {
+            current = null;
+            InteractionUIEvents.HideInteractionText?.Invoke();
+            return;
+        }
 
         InteractionUIEvents.ShowInteractionText?.Invoke(current.GetInfoText(player));
+    }
+
+    private void CleanupInteractables()
+    {
+        interactablesInRange.RemoveAll(IsUnityNull);
+    }
+
+    private static bool IsUnityNull(IInteractable interactable)
+    {
+        return interactable is Object unityObj && unityObj == null;
     }
 }

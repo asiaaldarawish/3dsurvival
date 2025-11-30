@@ -39,6 +39,7 @@ public class InteractionUI : MonoBehaviour
     {
         if (text != null)
         {
+            text.text = string.Empty;
             text.gameObject.SetActive(false);
         }
     }

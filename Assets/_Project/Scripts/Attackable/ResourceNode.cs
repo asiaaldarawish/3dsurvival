@@ -15,44 +15,12 @@ public class ResourceNode : MonoBehaviour, IInteractable, IAttackable
     private int currentHealth;
     private bool harvested;
 
-    private PlayerInteractHandler playerHandler;
-
     private void Awake()
     {
         currentHealth = Mathf.Max(1, maxHealth);
 
         if (dropItem == null && resourceData != null)
             dropItem = resourceData.dropItemData;
-    }
-
-    private void OnTriggerEnter(Collider other)
-    {
-        if (!other.CompareTag("Player")) return;
-
-        playerHandler = other.GetComponent<PlayerInteractHandler>();
-
-        if (playerHandler != null)
-            playerHandler.SetCurrent(this);
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (!other.CompareTag("Player")) return;
-
-        if (playerHandler != null)
-            playerHandler.ClearCurrent(this);
-
-        playerHandler = null;
-
-        InteractionUIEvents.HideInteractionText?.Invoke();
-    }
-
-    private void OnDestroy()
-    {
-        if (playerHandler != null)
-            playerHandler.ClearCurrent(this);
-
-        InteractionUIEvents.HideInteractionText?.Invoke();
     }
 
     public string GetInfoText(PlayerBootstrap player)
