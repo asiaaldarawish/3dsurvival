@@ -62,11 +62,13 @@ public class InventoryModel
                 ? Mathf.Min(remaining, data.maxStack)
                 : 1;
 
+            var toolData = data as ToolItemData;
+
             Slots[index].item = new InventoryItem
             {
                 data = data,
                 count = data.stackable ? toPut : 1,
-                durability = data.hasDurability ? data.maxDurability : 0
+                durability = toolData != null ? toolData.maxDurability : 0
             };
 
             remaining -= toPut;

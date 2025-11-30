@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4fd13230b0aaea41830bd4d640a4649, type: 3}
   m_Name: Axe Recipe
   m_EditorClassIdentifier: Assembly-CSharp::CraftingRecipe
-  outputItem: {fileID: 11400000, guid: 46491faebd9ad5241bd3f8f816f7549e, type: 2}
+  outputItem: {fileID: 11400000, guid: f50e74982e75e2a4caf1fe54290c358c, type: 2}
   outputAmount: 1
   ingredients:
-  - item: {fileID: 11400000, guid: 0bdbf0861acaf32499cb7c1a97cf46f0, type: 2}
+  - item: {fileID: 11400000, guid: 9a1e817b030f5af4787e196320db4636, type: 2}
     amount: 3
-  - item: {fileID: 11400000, guid: a3fa6abe23195ad4ab413265172c0375, type: 2}
+  - item: {fileID: 11400000, guid: fcefdc6c98781a9478e54fbad1980055, type: 2}
     amount: 2

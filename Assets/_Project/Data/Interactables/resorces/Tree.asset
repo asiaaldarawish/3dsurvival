@@ -9,21 +9,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 318c6fbf799bb3d459ef182cdda24eb9, type: 3}
+  m_Script: {fileID: 11500000, guid: 08c53ad1380e6c24aae4cb13d9f33597, type: 3}
   m_Name: Tree
-  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  m_EditorClassIdentifier: Assembly-CSharp::ResourceItemData
   id: Resorce_Tree
   displayName: Tree
-  description: a Resorce used for optaining wood
+  description: Wood resorce
   icon: {fileID: 0}
   handPrefab: {fileID: 0}
   worldPrefab: {fileID: 0}
   category: 0
   stackable: 0
   maxStack: 99
-  hasDurability: 0
-  maxDurability: 100
-  toolType: 0
   requiredTool: 1
-  DropItemData: {fileID: 11400000, guid: 0bdbf0861acaf32499cb7c1a97cf46f0, type: 2}
-  InfoText: Chop!
+  dropItemData: {fileID: 11400000, guid: 9a1e817b030f5af4787e196320db4636, type: 2}
+  infoText: Chop!

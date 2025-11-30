@@ -3,8 +3,7 @@ using UnityEngine;
 public class ResourceNode : MonoBehaviour, IInteractable, IAttackable
 {
     [Header("Resource")]
-    [SerializeField] private ItemData resourceData;
-    [SerializeField] private ItemData requiredTool;
+    [SerializeField] private ResourceItemData resourceData;
     [SerializeField] private int maxHealth = 3;
 
     [Header("Drops")]
@@ -22,8 +21,8 @@ public class ResourceNode : MonoBehaviour, IInteractable, IAttackable
     {
         currentHealth = Mathf.Max(1, maxHealth);
 
-        if (dropItem == null)
-            dropItem = resourceData.DropItemData;
+        if (dropItem == null && resourceData != null)
+            dropItem = resourceData.dropItemData;
     }
 
     private void OnTriggerEnter(Collider other)
@@ -61,9 +60,13 @@ public class ResourceNode : MonoBehaviour, IInteractable, IAttackable
         if (harvested) return string.Empty;
 
         if (!HasCorrectTool(player))
-            return requiredTool != null ? $"Use {requiredTool.displayName}" : "Requires tool";
+        {
+            return resourceData != null && resourceData.requiredTool != ToolType.None
+                ? $"Use {resourceData.requiredTool}"
+                : "Requires tool";
+        }
 
-        return resourceData.InfoText;
+        return resourceData != null ? resourceData.infoText : string.Empty;
     }
 
     public void Interact(PlayerBootstrap player)
@@ -104,11 +107,15 @@ public class ResourceNode : MonoBehaviour, IInteractable, IAttackable
 
     private bool HasCorrectTool(PlayerBootstrap player)
     {
-        if (player == null || requiredTool == null)
+        if (player == null || resourceData == null)
             return false;
+        if (resourceData.requiredTool == ToolType.None)
+            return true;
 
         var held = player.GetCurrentHotbarItem();
-        return held != null && held.data == requiredTool;
+        var heldTool = held?.data as ToolItemData;
+
+        return heldTool != null && heldTool.toolType == resourceData.requiredTool;
     }
 
     private void Harvest()

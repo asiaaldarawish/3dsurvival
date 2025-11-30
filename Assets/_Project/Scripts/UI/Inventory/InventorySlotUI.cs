@@ -74,7 +74,7 @@ public class InventorySlotUI : MonoBehaviour,
             if (durabilitySlider != null)
                 durabilitySlider.gameObject.SetActive(false);
         }
-        else if (data.hasDurability)
+        else if (data is ToolItemData toolData)
         {
             if (countText != null)
                 countText.gameObject.SetActive(false);
@@ -82,7 +82,7 @@ public class InventorySlotUI : MonoBehaviour,
             if (durabilitySlider != null)
             {
                 durabilitySlider.gameObject.SetActive(true);
-                durabilitySlider.maxValue = data.maxDurability;
+                durabilitySlider.maxValue = toolData.maxDurability;
                 durabilitySlider.value = item.durability;
             }
         }

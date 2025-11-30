@@ -29,11 +29,15 @@ public class ItemTooltipUI : MonoBehaviour
 
         // Show count or durability
         if (data.stackable)
+        { 
             extraText.text = $"Count: {item.count}";
-        else if (data.hasDurability)
-            extraText.text = $"Durability: {item.durability}/{data.maxDurability}";
+        }
+        else if (data is ToolItemData toolData)
+        {
+            extraText.text = $"Durability: {item.durability}/{toolData.maxDurability}";
+        }
         else
-            extraText.text = "";
+            extraText.text = string.Empty;
 
         cg.alpha = 1;
         cg.blocksRaycasts = false;

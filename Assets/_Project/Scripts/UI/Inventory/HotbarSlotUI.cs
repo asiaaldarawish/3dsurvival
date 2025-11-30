@@ -44,7 +44,7 @@ public class HotbarSlotUI : MonoBehaviour
                 durabilitySlider.gameObject.SetActive(false);
         }
         // Non-stackable with durability (tools, gear)
-        else if (data.hasDurability)
+        else if (data is ToolItemData toolData)
         {
             if (countText != null)
                 countText.gameObject.SetActive(false);
@@ -52,7 +52,7 @@ public class HotbarSlotUI : MonoBehaviour
             if (durabilitySlider != null)
             {
                 durabilitySlider.gameObject.SetActive(true);
-                durabilitySlider.maxValue = data.maxDurability;
+                durabilitySlider.maxValue = toolData.maxDurability;
                 durabilitySlider.value = item.durability;
             }
         }
