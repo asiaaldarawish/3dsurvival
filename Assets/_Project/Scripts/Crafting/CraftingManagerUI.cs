@@ -40,6 +40,12 @@ public class CraftingManagerUI : MonoBehaviour
                 : "Craft: --";
         }
 
+        if (entry != null && entry.iconImage != null)
+        {
+            entry.iconImage.sprite = recipe?.OutputItem != null ? recipe.OutputItem.icon : null;
+            entry.iconImage.enabled = entry.iconImage.sprite != null;
+        }
+
         if (entry != null && entry.ingredientsText != null)
         {
             entry.ingredientsText.text = BuildIngredientLabel(recipe);
@@ -91,4 +97,5 @@ public class CraftingRecipeUIEntry
     public Button craftButton;
     public TextMeshProUGUI titleText;
     public TextMeshProUGUI ingredientsText;
+    public Image iconImage;
 }

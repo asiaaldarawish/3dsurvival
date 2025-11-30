@@ -55,14 +55,10 @@ public class InventoryManager : MonoBehaviour
 
     private void ToggleInventory()
     {
-        isOpen = !isOpen;
-
-        // UI layer handles visuals
-        inventoryUIManager?.SetVisible(isOpen);
-
-        // When opening : refresh UI
         if (isOpen)
-            inventoryUIManager?.RefreshAllSlots();
+            CloseInventoryPanel();
+        else
+            OpenInventoryPanel();
     }
 
 
@@ -96,5 +92,24 @@ public class InventoryManager : MonoBehaviour
         {
             Debug.Log("No space to split stack.");
         }
+    }
+
+    public bool IsOpen() => isOpen;
+
+    public void OpenInventoryPanel()
+    {
+        if (isOpen) return;
+
+        isOpen = true;
+        inventoryUIManager?.SetVisible(true);
+        inventoryUIManager?.RefreshAllSlots();
+    }
+
+    public void CloseInventoryPanel()
+    {
+        if (!isOpen) return;
+
+        isOpen = false;
+        inventoryUIManager?.SetVisible(false);
     }
 }
