@@ -6,8 +6,9 @@ public class InventoryModel
 {
     public InventorySlot[] Slots { get; private set; }
 
-    private Dictionary<ItemData, List<int>> itemIndexMap;
-    private Queue<int> freeSlots;
+    private readonly Dictionary<ItemData, List<int>> itemIndexMap;
+    private readonly Queue<int> freeSlots;
+    private readonly HashSet<int> freeSlotSet;
 
     public event Action<int> OnSlotChanged;
     public event Action OnInventoryChanged;
@@ -18,11 +19,12 @@ public class InventoryModel
 
         itemIndexMap = new Dictionary<ItemData, List<int>>();
         freeSlots = new Queue<int>();
+        freeSlotSet = new HashSet<int>();
 
         for (int i = 0; i < size; i++)
         {
             Slots[i] = new InventorySlot();
-            freeSlots.Enqueue(i);
+            MarkSlotFree(i);
         }
     }
 
@@ -38,8 +40,9 @@ public class InventoryModel
         {
             for (int i = 0; i < indices.Count && remaining > 0; i++)
             {
-                int idx = indices[i];
-                var slot = Slots[idx];
+                int index = indices[i];
+                var slot = Slots[index];
+                if (slot.IsEmpty || slot.item.data != data) continue;
 
                 int spaceLeft = data.maxStack - slot.item.count;
                 if (spaceLeft <= 0) continue;
@@ -48,20 +51,18 @@ public class InventoryModel
                 slot.item.count += toAdd;
                 remaining -= toAdd;
 
-                OnSlotChanged?.Invoke(idx);
+                OnSlotChanged?.Invoke(index);
             }
         }
 
         // Fill new slots
-        while (remaining > 0 && freeSlots.Count > 0)
+        while (remaining > 0 && TryGetFreeSlot(out int index))
         {
-            int idx = freeSlots.Dequeue();
-
             int toPut = data.stackable
                 ? Mathf.Min(remaining, data.maxStack)
                 : 1;
 
-            Slots[idx].item = new InventoryItem
+            Slots[index].item = new InventoryItem
             {
                 data = data,
                 count = data.stackable ? toPut : 1,
@@ -70,17 +71,107 @@ public class InventoryModel
 
             remaining -= toPut;
 
-            if (!itemIndexMap.ContainsKey(data))
-                itemIndexMap[data] = new List<int>();
+            RemoveFreeSlot(index);
+            AddIndexMapping(data, index);
 
-            itemIndexMap[data].Add(idx);
-
-            OnSlotChanged?.Invoke(idx);
+            OnSlotChanged?.Invoke(index);
         }
 
         OnInventoryChanged?.Invoke();
         return remaining;
     }
+
+    public bool RemoveItem(ItemData data, int amount)
+    {
+        if (data == null || amount <= 0)
+            return false;
+
+        if (GetItemCount(data) < amount)
+            return false;
+
+        RemoveItemInternal(data, amount);
+        OnInventoryChanged?.Invoke();
+        return true;
+    }
+
+    public int GetItemCount(ItemData data)
+    {
+        if (data == null) return 0;
+
+        int total = 0;
+
+        if (!itemIndexMap.TryGetValue(data, out var indices))
+            return 0;
+
+        for (int i = 0; i < indices.Count; i++)
+        {
+            var slot = Slots[indices[i]];
+            if (slot.IsEmpty || slot.item.data != data) continue;
+
+            total += Mathf.Max(1, slot.item.count);
+        }
+
+        return total;
+    }
+
+    public bool HasItems(IEnumerable<CraftingIngredient> ingredients)
+    {
+        if (ingredients == null) return false;
+
+        foreach (var ingredient in ingredients)
+        {
+            if (ingredient == null || ingredient.item == null) return false;
+            if (ingredient.amount <= 0) return false;
+
+            if (GetItemCount(ingredient.item) < ingredient.amount)
+                return false;
+        }
+
+        return true;
+    }
+
+    public bool ConsumeItems(IEnumerable<CraftingIngredient> ingredients)
+    {
+        if (!HasItems(ingredients))
+            return false;
+
+        foreach (var ingredient in ingredients)
+        {
+            RemoveItemInternal(ingredient.item, ingredient.amount);
+        }
+
+        OnInventoryChanged?.Invoke();
+        return true;
+    }
+
+    private void RemoveItemInternal(ItemData data, int amount)
+    {
+        int remaining = amount;
+
+        if (!itemIndexMap.TryGetValue(data, out var indices))
+            return;
+
+        for (int i = indices.Count - 1; i >= 0 && remaining > 0; i--)
+        {
+            int index = indices[i];
+            var slot = Slots[index];
+            if (slot.IsEmpty || slot.item.data != data) continue;
+
+            int toTake = Mathf.Min(remaining, Mathf.Max(1, slot.item.count));
+            slot.item.count -= toTake;
+            remaining -= toTake;
+
+            if (slot.item.count <= 0)
+            {
+                slot.Clear();
+                RemoveIndexMapping(data, index);
+                MarkSlotFree(index);
+            }
+
+            OnSlotChanged?.Invoke(index);
+        }
+    }
+
 
     public void SwapSlots(int from, int to)
     {
@@ -88,9 +179,15 @@ public class InventoryModel
         if (from < 0 || from >= Slots.Length) return;
         if (to < 0 || to >= Slots.Length) return;
 
-        var tmp = Slots[from].item;
-        Slots[from].item = Slots[to].item;
-        Slots[to].item = tmp;
+        var fromItem = Slots[from].item;
+        var toItem = Slots[to].item;
+
+        Slots[from].item = toItem;
+        Slots[to].item = fromItem;
+
+        UpdateSlotMappingAfterChange(from, fromItem, Slots[from].item);
+        UpdateSlotMappingAfterChange(to, toItem, Slots[to].item);
+
 
         OnSlotChanged?.Invoke(from);
         OnSlotChanged?.Invoke(to);
@@ -107,38 +204,94 @@ public class InventoryModel
         var item = slot.item;
         if (!item.data.stackable || item.count < 2) return false;
 
+        if (!TryGetFreeSlot(out int freeIndex)) return false;
+
         int half = item.count / 2;
         item.count -= half;
 
-        // find free slot
-        while (freeSlots.Count > 0)
+        Slots[freeIndex].item = new InventoryItem
         {
-            int idx = freeSlots.Dequeue();
+            data = item.data,
+            count = half,
+            durability = item.durability
+        };
 
-            if (!Slots[idx].IsEmpty) continue;
+        RemoveFreeSlot(freeIndex);
+        AddIndexMapping(item.data, freeIndex);
 
-            Slots[idx].item = new InventoryItem
-            {
-                data = item.data,
-                count = half,
-                durability = item.durability
-            };
+        OnSlotChanged?.Invoke(index);
+        OnSlotChanged?.Invoke(freeIndex);
+        OnInventoryChanged?.Invoke();
+        return true;
+    }
 
-            // track in index map
-            if (!itemIndexMap.TryGetValue(item.data, out var list))
-            {
-                list = new List<int>();
-                itemIndexMap[item.data] = list;
-            }
-            list.Add(idx);
-
-            OnSlotChanged?.Invoke(index);
-            OnSlotChanged?.Invoke(idx);
-            OnInventoryChanged?.Invoke();
-            return true;
+    private void AddIndexMapping(ItemData data, int index)
+    {
+        if (!itemIndexMap.TryGetValue(data, out var indices))
+        {
+            indices = new List<int>();
+            itemIndexMap[data] = indices;
         }
 
-        // no free slot available
+        if (!indices.Contains(index))
+            indices.Add(index);
+    }
+
+    private void RemoveIndexMapping(ItemData data, int index)
+    {
+        if (!itemIndexMap.TryGetValue(data, out var indices))
+            return;
+
+        indices.Remove(index);
+        if (indices.Count == 0)
+            itemIndexMap.Remove(data);
+    }
+    private void UpdateSlotMappingAfterChange(int index, InventoryItem previousItem, InventoryItem currentItem)
+    {
+        if (previousItem != null && previousItem.data != null && (currentItem == null || currentItem.data != previousItem.data))
+        {
+            RemoveIndexMapping(previousItem.data, index);
+        }
+
+        if (currentItem != null && currentItem.data != null)
+        {
+            AddIndexMapping(currentItem.data, index);
+            RemoveFreeSlot(index);
+        }
+        else
+        {
+            MarkSlotFree(index);
+        }
+    }
+
+    private void MarkSlotFree(int index)
+    {
+        if (freeSlotSet.Add(index))
+            freeSlots.Enqueue(index);
+    }
+
+    private void RemoveFreeSlot(int index)
+    {
+        freeSlotSet.Remove(index);
+    }
+
+    private bool TryGetFreeSlot(out int index)
+    {
+        while (freeSlots.Count > 0)
+        {
+            int candidate = freeSlots.Dequeue();
+            if (!freeSlotSet.Contains(candidate))
+                continue;
+
+            if (Slots[candidate].IsEmpty)
+            {
+                freeSlotSet.Remove(candidate);
+                index = candidate;
+                return true;
+            }
+            
+        }
+        index = -1;
         return false;
     }
 }
