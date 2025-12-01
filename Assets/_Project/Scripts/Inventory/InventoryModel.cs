@@ -1,27 +1,26 @@
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class InventoryModel
 {
     public InventorySlot[] Slots { get; private set; }
 
-    private readonly Dictionary<ItemData, HashSet<int>> itemSlotLookup;
-    private readonly Queue<int> emptySlotQueue;
-    private readonly HashSet<int> emptySlotSet;
+    private readonly Dictionary<ItemData, ItemRecord> itemMap;
+    private readonly Queue<int> emptySlots;
+    private readonly bool[] emptySlotFlags;
 
     public event Action<int> OnSlotChanged;
     public event Action OnInventoryChanged;
 
+    //init
     public InventoryModel(int size)
     {
         Slots = new InventorySlot[size];
 
-        itemSlotLookup = new Dictionary<ItemData, HashSet<int>>();
-        emptySlotQueue = new Queue<int>();
-        emptySlotSet = new HashSet<int>();
-
-        //all slots empty at start
+        itemMap = new Dictionary<ItemData, ItemRecord>();
+        emptySlots = new Queue<int>(size);
+        emptySlotFlags = new bool[size];
         for (int i = 0; i < size; i++)
         {
             Slots[i] = new InventorySlot();
@@ -34,36 +33,36 @@ public class InventoryModel
         if (data == null || amount <= 0)
             return amount;
 
+        var record = GetOrCreateRecord(data);
         int remaining = amount;
 
-        if (data.stackable && itemSlotLookup.TryGetValue(data, out var stackSlots))
+        //fill partial stack
+        while (remaining > 0 && record.TryGetPartialSlot(out int partialIndex))
         {
-            foreach (var stackIndex in stackSlots)
+            var slot = Slots[partialIndex];
+            if (slot.IsEmpty || slot.item.data != data)
             {
-                if (remaining <= 0) break;
-
-                var slot = Slots[stackIndex];
-                if (slot.IsEmpty || slot.item.data != data) continue;
-
-                int spaceLeft = data.maxStack - slot.item.count;
-                if (spaceLeft <= 0) continue;
-
-                int toAdd = Mathf.Min(spaceLeft, remaining);
-                slot.item.count += toAdd;
-                remaining -= toAdd;
-
-                OnSlotChanged?.Invoke(stackIndex);
+                record.RemoveSlot(partialIndex);
+                continue;
             }
-        }
 
-        while (remaining > 0 && TryGetEmptySlot(out int freeIndex))
+            int spaceLeft = data.maxStack - slot.item.count;
+            int toAdd = Mathf.Min(spaceLeft, remaining);
+            slot.item.count += toAdd;
+            record.totalCount += toAdd;
+            remaining -= toAdd;
+
+            record.UpdatePartial(partialIndex, slot.item.count, data.maxStack, data.stackable);
+            OnSlotChanged?.Invoke(partialIndex);
+        }
+        //add to empty slot
+        while (remaining > 0 && TryPopEmptySlot(out int freeIndex))
         {
             int toPut = data.stackable
                 ? Mathf.Min(remaining, data.maxStack)
                 : 1;
 
             var toolData = data as ToolItemData;
-            var previousItem = Slots[freeIndex].item;
 
             Slots[freeIndex].item = new InventoryItem
             {
@@ -72,9 +71,9 @@ public class InventoryModel
                 durability = toolData != null ? toolData.maxDurability : 0
             };
 
+            record.totalCount += toPut;
+            record.AddSlot(freeIndex, Slots[freeIndex].item.count, data.maxStack, data.stackable);
             remaining -= toPut;
-
-            UpdateSlotMappings(freeIndex, previousItem);
 
             OnSlotChanged?.Invoke(freeIndex);
         }
@@ -88,89 +87,50 @@ public class InventoryModel
         if (data == null || amount <= 0)
             return false;
 
-        if (GetItemCount(data) < amount)
+        if (!itemMap.TryGetValue(data, out var record))
+            return false;
+
+        if (record.totalCount < amount)
             return false;
 
         int remaining = amount;
 
-        if (!itemSlotLookup.TryGetValue(data, out var slotSet))
-            return false;
-
-        var slotsToCheck = new List<int>(slotSet);
-
-        for (int i = slotsToCheck.Count - 1; i >= 0 && remaining > 0; i--)
+        //remove item from first maxed slot
+        while (remaining > 0 && record.TryGetFilledSlot(out int slotIndex))
         {
-            int index = slotsToCheck[i];
-            var slot = Slots[index];
-            if (slot.IsEmpty || slot.item.data != data) continue;
-
-            int toTake = Mathf.Min(remaining, Mathf.Max(1, slot.item.count));
-            slot.item.count -= toTake;
-            remaining -= toTake;
-
-            if (slot.item.count <= 0)
+            var slot = Slots[slotIndex];
+            if (slot.IsEmpty || slot.item.data != data)
             {
-                var previous = slot.item;
-                slot.Clear();
-                UpdateSlotMappings(index, previous);
+                record.RemoveSlot(slotIndex);
+                continue;
             }
 
-            OnSlotChanged?.Invoke(index);
+            int toTake = Mathf.Min(remaining, slot.item.count);
+            slot.item.count -= toTake;
+            record.totalCount -= toTake;
+            remaining -= toTake;
+
+            // if count = 0 add slot to empty
+            if (slot.item.count <= 0)
+            {
+                slot.Clear();
+                record.RemoveSlot(slotIndex);
+                MarkSlotEmpty(slotIndex);
+            }
+            // if not update the partial slot
+            else
+            {
+                record.UpdatePartial(slotIndex, slot.item.count, data.maxStack, data.stackable);
+            }
+
+            OnSlotChanged?.Invoke(slotIndex);
         }
+        //if all stacks of the same type is 0 remove the record from itemMap
+        if (record.totalCount <= 0)
+            itemMap.Remove(data);
 
         OnInventoryChanged?.Invoke();
         return remaining == 0;
-    }
-
-
-    public int GetItemCount(ItemData data)
-    {
-        if (data == null) return 0;
-
-        
-        if (!itemSlotLookup.TryGetValue(data, out var slotsForItem))
-            return 0;
-
-        int total = 0;
-        foreach (var index in slotsForItem)
-        {
-            var slot = Slots[index];
-            if (slot.IsEmpty || slot.item.data != data) continue;
-
-            total += Mathf.Max(1, slot.item.count);
-        }
-
-        return total;
-    }
-
-    public bool HasItems(IEnumerable<CraftingIngredient> ingredients)
-    {
-        if (ingredients == null) return false;
-
-        foreach (var ingredient in ingredients)
-        {
-            if (ingredient == null || ingredient.item == null) return false;
-            if (ingredient.amount <= 0) return false;
-
-            if (GetItemCount(ingredient.item) < ingredient.amount)
-                return false;
-        }
-
-        return true;
-    }
-
-    public bool ConsumeItems(IEnumerable<CraftingIngredient> ingredients)
-    {
-        if (!HasItems(ingredients))
-            return false;
-
-        foreach (var ingredient in ingredients)
-        {
-            RemoveItem(ingredient.item, ingredient.amount);
-        }
-
-        OnInventoryChanged?.Invoke();
-        return true;
     }
 
     public void SwapSlots(int from, int to)
@@ -181,11 +141,14 @@ public class InventoryModel
         var fromItem = Slots[from].item;
         var toItem = Slots[to].item;
 
+        DetachSlot(from, fromItem);
+        DetachSlot(to, toItem);
+
         Slots[from].item = toItem;
         Slots[to].item = fromItem;
 
-        UpdateSlotMappings(from, fromItem);
-        UpdateSlotMappings(to, toItem);
+        AttachSlot(from, Slots[from].item);
+        AttachSlot(to, Slots[to].item);
 
         OnSlotChanged?.Invoke(from);
         OnSlotChanged?.Invoke(to);
@@ -202,7 +165,7 @@ public class InventoryModel
         var item = slot.item;
         if (!item.data.stackable || item.count < 2) return false;
 
-        if (!TryGetEmptySlot(out int freeIndex)) return false;
+        if (!TryPopEmptySlot(out int freeIndex)) return false;
 
         int half = item.count / 2;
         item.count -= half;
@@ -214,7 +177,11 @@ public class InventoryModel
             durability = item.durability
         };
 
-        UpdateSlotMappings(freeIndex, null);
+        if (itemMap.TryGetValue(item.data, out var record))
+        {
+            record.UpdatePartial(index, item.count, item.data.maxStack, item.data.stackable);
+            record.AddSlot(freeIndex, Slots[freeIndex].item.count, item.data.maxStack, item.data.stackable);
+        }
 
         OnSlotChanged?.Invoke(index);
         OnSlotChanged?.Invoke(freeIndex);
@@ -222,65 +189,118 @@ public class InventoryModel
         return true;
     }
 
-    private void UpdateSlotMappings(int index, InventoryItem previousItem)
+    //get item count of the requested data without loops
+    public int GetItemCount(ItemData data)
     {
-        if (previousItem != null && previousItem.data != null && itemSlotLookup.TryGetValue(previousItem.data, out var previousSet))
+        if (data == null) return 0;
+
+        return itemMap.TryGetValue(data, out var record) ? record.totalCount : 0;
+    }
+
+    //check if player has required item for crafting
+    public bool HasItems(CraftingRequirements requirements)
+    {
+        if (!IsRequirementSatisfied(requirements.requirement1)) return false;
+        if (!IsRequirementSatisfied(requirements.requirement2)) return false;
+        if (!IsRequirementSatisfied(requirements.requirement3)) return false;
+        if (!IsRequirementSatisfied(requirements.requirement4)) return false;
+
+        return true;
+    }
+
+    public bool ConsumeItems(CraftingRequirements requirements)
+    {
+        if (!HasItems(requirements))
+            return false;
+
+        ConsumeRequirement(requirements.requirement1);
+        ConsumeRequirement(requirements.requirement2);
+        ConsumeRequirement(requirements.requirement3);
+        ConsumeRequirement(requirements.requirement4);
+
+        OnInventoryChanged?.Invoke();
+        return true;
+    }
+
+    private void ConsumeRequirement(CraftingRequirement requirement)
+    {
+        if (requirement.item == null) return;
+        if (requirement.amount <= 0) return;
+
+        RemoveItem(requirement.item, requirement.amount);
+    }
+
+    private bool IsRequirementSatisfied(CraftingRequirement requirement)
+    {
+        if (requirement.item == null) return true;
+        if (requirement.amount <= 0) return false;
+
+        return GetItemCount(requirement.item) >= requirement.amount;
+    }
+
+    // if record exits add , if not create
+    private ItemRecord GetOrCreateRecord(ItemData data)
+    {
+        if (!itemMap.TryGetValue(data, out var record))
         {
-            previousSet.Remove(index);
-            if (previousSet.Count == 0)
-                itemSlotLookup.Remove(previousItem.data);
+            record = new ItemRecord();
+            itemMap[data] = record;
         }
 
-        var current = Slots[index].item;
-        if (current != null && current.data != null)
-        {
-            if (!itemSlotLookup.TryGetValue(current.data, out var set))
-            {
-                set = new HashSet<int>();
-                itemSlotLookup[current.data] = set;
-            }
+        return record;
+    }
 
-            set.Add(index);
-            RemoveSlotFromEmpty(index);
-        }
-        else
+    private void AttachSlot(int index, InventoryItem item)
+    {
+        if (item == null || item.data == null)
         {
             Slots[index].Clear();
             MarkSlotEmpty(index);
+            return;
         }
+
+        emptySlotFlags[index] = false;
+        var record = GetOrCreateRecord(item.data);
+        record.AddSlot(index, item.count, item.data.maxStack, item.data.stackable);
+    }
+
+    private void DetachSlot(int index, InventoryItem item)
+    {
+        if (item == null || item.data == null) return;
+
+        if (!itemMap.TryGetValue(item.data, out var record)) return;
+
+        record.RemoveSlot(index);
     }
 
     private void MarkSlotEmpty(int index)
     {
-        if (emptySlotSet.Add(index))
-            emptySlotQueue.Enqueue(index);
+        if (emptySlotFlags[index])
+            return;
+
+        emptySlotFlags[index] = true;
+        emptySlots.Enqueue(index);
     }
 
-    private void RemoveSlotFromEmpty(int index)
+    //add slot as empty
+    private bool TryPopEmptySlot(out int index)
     {
-        emptySlotSet.Remove(index);
-    }
-
-    private bool TryGetEmptySlot(out int index)
-    {
-        while (emptySlotQueue.Count > 0)
+        while (emptySlots.Count > 0)
         {
-            int candidate = emptySlotQueue.Dequeue();
-            if (!emptySlotSet.Contains(candidate))
+            int candidate = emptySlots.Dequeue();
+            if (!emptySlotFlags[candidate])
                 continue;
 
-            if (Slots[candidate].IsEmpty)
-            {
-                emptySlotSet.Remove(candidate);
-                index = candidate;
-                return true;
-            }
+            emptySlotFlags[candidate] = false;
+            index = candidate;
+            return true;
         }
 
         index = -1;
         return false;
     }
 
+    //check is index in range of the slot size
     private bool IsValidIndex(int index)
     {
         return index >= 0 && index < Slots.Length;

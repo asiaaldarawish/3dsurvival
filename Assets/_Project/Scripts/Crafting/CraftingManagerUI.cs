@@ -23,9 +23,11 @@ public class CraftingManagerUI : MonoBehaviour
     {
         if (craftingManager == null) return;
 
-        foreach (var entry in recipeEntries)
+        if (recipeEntries == null) return;
+
+        for (int i = 0; i < recipeEntries.Length; i++)
         {
-            RefreshEntry(entry);
+            RefreshEntry(recipeEntries[i]);
         }
     }
 
@@ -64,22 +66,27 @@ public class CraftingManagerUI : MonoBehaviour
 
     private string BuildIngredientLabel(CraftingRecipe recipe)
     {
-        if (recipe == null || recipe.Ingredients == null)
+        if (recipe == null)
             return string.Empty;
 
+        var requirements = recipe.Requirements;
         var sb = new StringBuilder();
-        for (int i = 0; i < recipe.Ingredients.Count; i++)
-        {
-            var ingredient = recipe.Ingredients[i];
-            if (ingredient == null || ingredient.item == null) continue;
 
-            if (sb.Length > 0)
-                sb.Append("\n");
+        AppendRequirement(sb, requirements.requirement1);
+        AppendRequirement(sb, requirements.requirement2);
+        AppendRequirement(sb, requirements.requirement3);
+        AppendRequirement(sb, requirements.requirement4);
 
-            sb.Append($"- {ingredient.amount}x {ingredient.item.displayName}");
-        }
+        return sb.ToString().TrimStart('\n');
+    }
 
-        return sb.ToString();
+    private void AppendRequirement(StringBuilder sb, CraftingRequirement requirement)
+    {
+        if (requirement.item == null || requirement.amount <= 0)
+            return;
+
+        sb.Append('\n');
+        sb.Append($"- {requirement.amount}x {requirement.item.displayName}");
     }
 
     private void AttemptCraft(CraftingRecipe recipe)

@@ -18,9 +18,8 @@ MonoBehaviour:
   icon: {fileID: 0}
   handPrefab: {fileID: 0}
   worldPrefab: {fileID: 0}
-  category: 0
   stackable: 0
-  maxStack: 99
+  maxStack: 1
   requiredTool: 1
   dropItemData: {fileID: 11400000, guid: 9a1e817b030f5af4787e196320db4636, type: 2}
   infoText: Chop!

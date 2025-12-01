@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "Game/Crafting Recipe")]
@@ -9,17 +8,26 @@ public class CraftingRecipe : ScriptableObject
     public ItemData outputItem;
     public int outputAmount = 1;
 
-    [Header("Ingredients")]
-    public CraftingIngredient[] ingredients;
+    [Header("Ingredients (max 4)")]
+    public CraftingRequirements requirements;
 
     public ItemData OutputItem => outputItem;
     public int OutputAmount => Mathf.Max(1, outputAmount);
-    public IReadOnlyList<CraftingIngredient> Ingredients => ingredients;
+    public CraftingRequirements Requirements => requirements;
 }
 
 [Serializable]
-public class CraftingIngredient
+public struct CraftingRequirement
 {
     public ItemData item;
-    public int amount = 1;
+    public int amount;
+}
+
+[Serializable]
+public struct CraftingRequirements
+{
+    public CraftingRequirement requirement1;
+    public CraftingRequirement requirement2;
+    public CraftingRequirement requirement3;
+    public CraftingRequirement requirement4;
 }

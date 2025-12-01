@@ -22,7 +22,7 @@ public class CraftingManager : MonoBehaviour
         if (recipe == null || inventoryManager == null) return false;
         if (recipe.OutputItem == null) return false;
 
-        return inventoryManager.Model.HasItems(recipe.Ingredients);
+        return inventoryManager.Model.HasItems(recipe.Requirements);
     }
 
     public bool Craft(CraftingRecipe recipe)
@@ -30,7 +30,7 @@ public class CraftingManager : MonoBehaviour
         if (!CanCraft(recipe))
             return false;
 
-        if (!inventoryManager.Model.ConsumeItems(recipe.Ingredients))
+        if (!inventoryManager.Model.ConsumeItems(recipe.Requirements))
             return false;
 
         int leftover = inventoryManager.Model.AddItem(recipe.OutputItem, recipe.OutputAmount);
