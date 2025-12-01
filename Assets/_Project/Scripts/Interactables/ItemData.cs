@@ -12,31 +12,15 @@ public class ItemData : ScriptableObject
     public Sprite icon;
     public GameObject handPrefab;   // model when held
     public GameObject worldPrefab;  // pickup prefab
-
-    [Header("Type")]
-    public ItemCategory category;
-
-    [Header("Stacking")]
-    public bool stackable = true;
-    public int maxStack = 99;
+    public bool stackable = false;
+    public int maxStack = 1;
+    protected virtual void OnValidate()
+    {
+        stackable = false;
+        maxStack = 1;
+    }
 }
 
-public enum ItemCategory
-{
-    Resource,
-    Material,
-    Tool,
-    Gear,
-    Consumable,   // potions, food
-    Document,     // papers, scrolls, notes
-    Quest,
-    Misc
-}
 
-public enum ToolType
-{
-    None,
-    Axe,
-    Pickaxe,
-    Hammer
-}
+
+

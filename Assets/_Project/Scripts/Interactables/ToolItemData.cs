@@ -7,3 +7,11 @@ public class ToolItemData : ItemData
     public ToolType toolType = ToolType.None;
     public int maxDurability = 100;
 }
+
+public enum ToolType
+{
+    None,
+    Axe,
+    Pickaxe,
+    Hammer
+}
